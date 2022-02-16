@@ -20,7 +20,7 @@ Repository Files:
 -   `im/`: Training images
 
 [Serialized
-Files]((https://drive.google.com/drive/folders/1U0WKZV4r7s9eIoFGdEZzqtdIBGh4ATEb?usp=sharing)):
+Files](https://drive.google.com/drive/folders/1U0WKZV4r7s9eIoFGdEZzqtdIBGh4ATEb?usp=sharing):
 
 -   `features.pickle`: Serialized
     [HOG](https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients)
