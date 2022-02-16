@@ -1,0 +1,4 @@
+im/
+.DS_Store
+__pycache__/
+*.pickle
