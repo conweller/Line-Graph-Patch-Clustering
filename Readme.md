@@ -17,7 +17,7 @@ Repository Files:
     -   `line-test-1.jpg`
     -   `line-test-2.jpg`
     -   `line-test-3.jpg`
--   `im/`: Training images
+-   `im/`: Training images (Ed's dataset, needs to be added)
 
 [Serialized
 Files](https://drive.google.com/drive/folders/1U0WKZV4r7s9eIoFGdEZzqtdIBGh4ATEb?usp=sharing):
