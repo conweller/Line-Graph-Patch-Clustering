@@ -11,24 +11,25 @@ from gensim.models import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity, manhattan_distances, euclidean_distances
 from matplotlib import pyplot as plt
 
-IMG_SIZE = 448
-WINDOW_SIZE = 32
-STRIDE = 32
+IMG_SIZE = (448, 448)
+WINDOW_SIZE = (32, 32)
+STRIDE = WINDOW_SIZE
 TRAIN_SIZE = 998
-CONTEXT_SIZE = 5
+CONTEXT_SIZE = (5, 5)
+N_CLUSTERS = 1000
+VERSION = "0"
 
 
-def open_img(filename, color="L", size=(IMG_SIZE, IMG_SIZE)):
+def open_img(filename, color="L", size=IMG_SIZE):
     """return grayscale image matrix"""
     return np.array(Image.open(filename).convert(color).resize(size))
 
 
 def get_img_sections(img):
     """Covert image to image sections"""
-    windowed = view_as_windows(img, window_shape=(
-        WINDOW_SIZE, WINDOW_SIZE), step=STRIDE)
-    (nx, ny, w, h) = windowed.shape
-    return windowed.reshape(nx * ny, w, h)
+    windowed = view_as_windows(img, window_shape=WINDOW_SIZE, step=STRIDE)
+    (nx, ny, h, w) = windowed.shape
+    return windowed.reshape(nx * ny, h, w)
 
 
 def get_features(section):
@@ -62,19 +63,22 @@ def get_all_features(imgs):
 
 def get_labeled_imgs(labels):
     """Return iamge represented by the labels"""
-    return labels.reshape(TRAIN_SIZE, IMG_SIZE // WINDOW_SIZE, IMG_SIZE // WINDOW_SIZE)
+    (winh, winw) = WINDOW_SIZE
+    (imgh, imgw) = IMG_SIZE
+    return labels.reshape(TRAIN_SIZE, imgh // winh, imgw // winw)
 
 
 def get_contexts(labeled_imgs):
     """Get Context windows for each pixels (i.e. convert a labeled imgs into
     the training input for word2vec)
     """
-    (n, w, _) = labeled_imgs.shape
-    n_contexts_per_img = ((w+1) - CONTEXT_SIZE)**2
-    contexts = np.empty((n * n_contexts_per_img, CONTEXT_SIZE**2))
+    (n, imgw, imgh) = labeled_imgs.shape
+    (contextw, contexth) = CONTEXT_SIZE
+    n_contexts_per_img = ((imgw+1) - contextw)*((imgh+1) - contexth)
+    contexts = np.empty((n * n_contexts_per_img, contextw * contexth))
     for idx, img in enumerate(labeled_imgs):
-        contexts[idx*n_contexts_per_img:idx*n_contexts_per_img+n_contexts_per_img] = view_as_windows(img, window_shape=(
-            CONTEXT_SIZE, CONTEXT_SIZE)).reshape(n_contexts_per_img, CONTEXT_SIZE**2)
+        contexts[idx*n_contexts_per_img:idx*n_contexts_per_img+n_contexts_per_img] = view_as_windows(
+            img, window_shape=CONTEXT_SIZE).reshape(n_contexts_per_img, contextw * contexth)
     return contexts.astype(int)
 
 
@@ -89,12 +93,14 @@ def get_wv_model(contexts):
 
 def show_cluster(km_model, cluster_idx, nrows=5, ncols=5):
     """Show a sampling of a given cluster"""
+    n_clusters_per_img = (
+        (IMG_SIZE[0] // WINDOW_SIZE[0]) * (IMG_SIZE[1] // WINDOW_SIZE[1]))
     cluster_example_idxs = np.where(km_model.labels_ == cluster_idx)[0]
     _, axarr = plt.subplots(nrows, ncols, figsize=(15, 10))
     for ax_idx, feature_idx in enumerate(cluster_example_idxs[:nrows*ncols]):
-        filename_idx = feature_idx // ((IMG_SIZE // WINDOW_SIZE)**2)
+        filename_idx = feature_idx // n_clusters_per_img
         axarr[ax_idx // nrows, ax_idx % ncols].imshow(get_img_sections(open_img(
-            filenames[filename_idx]))[feature_idx % ((IMG_SIZE // WINDOW_SIZE)**2)])
+            filenames[filename_idx]))[feature_idx % n_clusters_per_img])
     plt.show()
 
 
@@ -129,16 +135,17 @@ filenames = list(filter(imghdr.what, map(
 imgs = map(open_img, filenames)
 
 features = pickle_load_or_create(
-    "features.pickle", lambda: np.array(get_all_features(imgs)))
+    f"features_V{VERSION}.pickle", lambda: np.array(get_all_features(imgs)))
 
 km_model = pickle_load_or_create(
-    "km_model.pickle", lambda: KMeans(n_clusters=1000).fit(features))
+    f"km_model_V{VERSION}.pickle", lambda: KMeans(n_clusters=N_CLUSTERS).fit(features))
 
 labeled_imgs = pickle_load_or_create(
-    "labeled_imgs.pickle", lambda: get_labeled_imgs(km_model.labels_))
+    f"labeled_imgs_V{VERSION}.pickle", lambda: get_labeled_imgs(km_model.labels_))
 
 contexts = pickle_load_or_create(
-    "contexts.pickle", lambda: get_contexts(labeled_imgs))
+    f"contexts_V{VERSION}.pickle", lambda: get_contexts(labeled_imgs))
+
 
 wv_model = pickle_load_or_create(
-    "wv_model.pickle", lambda: get_wv_model(contexts))
+    f"wv_model_V{VERSION}.pickle", lambda: get_wv_model(contexts))
