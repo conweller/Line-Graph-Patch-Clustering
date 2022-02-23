@@ -22,13 +22,13 @@ Repository Files:
 [Serialized
 Files](https://drive.google.com/drive/folders/1U0WKZV4r7s9eIoFGdEZzqtdIBGh4ATEb?usp=sharing):
 
--   `features.pickle`: Serialized
+-   `features_V0.pickle`: Serialized
     [HOG](https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients)
     feature vectors for each patch
--   `km_model.pickle`: Serialized K-Nearest Neighbors classifier
--   `labeled_imgs.pickle`: Serialized labeled image patches
--   `contexts.pickle`: "sentences" used for training word2vec model
--   `wv_model.pickle`: trained word2vec model
+-   `km_model_V0.pickle`: Serialized K-Nearest Neighbors classifier
+-   `labeled_imgs_V0.pickle`: Serialized labeled image patches
+-   `contexts_V0.pickle`: "sentences" used for training word2vec model
+-   `wv_model_V0.pickle`: trained word2vec model
 
 To get the classified images patches you can just run:
 
