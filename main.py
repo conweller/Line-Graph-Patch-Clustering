@@ -14,10 +14,9 @@ from matplotlib import pyplot as plt
 IMG_SIZE = (448, 448)
 WINDOW_SIZE = (32, 32)
 STRIDE = WINDOW_SIZE
-TRAIN_SIZE = 998
 CONTEXT_SIZE = (5, 5)
 N_CLUSTERS = 1000
-VERSION = "0"
+VERSION = "1"
 
 
 def open_img(filename, color="L", size=IMG_SIZE):
@@ -54,8 +53,7 @@ def pickle_load_or_create(filename, default_fn):
 def get_all_features(imgs):
     """Return all of HOG features for the given images"""
     features = []
-    for _ in range(TRAIN_SIZE):
-        img = next(imgs)
+    for img in imgs:
         for section in get_img_sections(img):
             features.append(get_features(section))
     return np.array(features)
@@ -65,7 +63,7 @@ def get_labeled_imgs(labels):
     """Return iamge represented by the labels"""
     (winh, winw) = WINDOW_SIZE
     (imgh, imgw) = IMG_SIZE
-    return labels.reshape(TRAIN_SIZE, imgh // winh, imgw // winw)
+    return labels.reshape(len(labels) // (imgh // winh * imgw // winw), imgh // winh, imgw // winw)
 
 
 def get_contexts(labeled_imgs):
@@ -128,9 +126,22 @@ def map_similarity_to_img(wv_model, labeled_img, cluster_idx):
                 str(cluster_idx), labeled_img[i, j])
     return new_image
 
+def embedded_img(wv_model, labeled_img):
+    (w, h) = labeled_img.shape
+    new_image = np.empty((w, h, 100))
+    for i in range(w):
+        for j in range(h):
+            new_image[i, j] = wv_model.wv[(str(labeled_img[i, j]))]
+    return new_image
 
-filenames = list(filter(imghdr.what, map(
-    lambda imgname: Path("im") / imgname, os.listdir("im"))))
+
+filenames_orig = list(filter(imghdr.what, map(
+    lambda imgname: Path("im") / imgname, os.listdir("im"))))[:850]
+
+filenames_new = list(filter(imghdr.what, map(
+    lambda imgname: Path("from-google/Line-Graphs/") / imgname, os.listdir("from-google/Line-Graphs/"))))
+
+filenames = filenames_orig + filenames_new
 
 imgs = map(open_img, filenames)
 
